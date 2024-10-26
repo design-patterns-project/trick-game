@@ -6,16 +6,16 @@ class Player(IPlayer):
         self.score = 0
         self.hand = []
         self.active = True
-        self.mediator = None  # Inicialização da referência do Mediator
+        self.mediator = None  
 
     def set_mediator(self, mediator):
-        self.mediator = mediator  # Método para definir o mediador
+        self.mediator = mediator  
 
     def play_card(self, card):
         if card in self.hand:
             self.hand.remove(card)
             print(f"{self.name} jogou a carta: {card}")
-            self.complete_turn()  # Notificar que o turno foi concluído
+            self.complete_turn()  
         else:
             print("Carta não está na mão.")
 
@@ -32,3 +32,7 @@ class Player(IPlayer):
 
     def refuse_truco(self):
         print(f"{self.name} recusou o truco.")
+
+    def has_card(self, card):
+        """Verifica se o jogador possui a carta em sua mão."""
+        return card in self.hand
