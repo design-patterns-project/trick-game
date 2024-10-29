@@ -1,4 +1,5 @@
 from typing import List, Optional
+import random
 from characters.interfaces.i_bot import IBot
 from characters.interfaces.i_game import GameInterface
 from characters.models.bot import SimpleBot
@@ -6,6 +7,7 @@ from characters.models.player import Player
 from designs_patterns.observer.interfaces.i_observer import IObserver
 from designs_patterns.observer.interfaces.i_subject import ISubject
 from designs_patterns.mediator.game_mediator import GameMediator
+from characters.models.card import Card  # Supondo que você tenha uma classe Card para representar as cartas
 
 class Game(GameInterface, ISubject):
     def __init__(self, players: List[Player], mediator: GameMediator):
@@ -15,6 +17,32 @@ class Game(GameInterface, ISubject):
         self.current_turn: int = 0
         self.observers: List[IObserver] = []
         self.played_cards = []
+        self.deck = self.create_deck()  # Criar um baralho de cartas
+        self.shuffle_deck()  # Embaralhar o baralho
+        self.deal_cards()  # Distribuir cartas para os jogadores
+
+    def create_deck(self):
+        """Cria um baralho de cartas."""
+        suits = ['Copas', 'Ouros', 'Espadas', 'Paus']
+        values = ['A', '2', '3', '4', '5', '6', '7', 'Q', 'J', 'K']
+        return [Card(value, suit) for suit in suits for value in values]
+
+    def shuffle_deck(self):
+        """Embaralha o baralho."""
+        random.shuffle(self.deck)
+
+    def deal_cards(self):
+        """Distribui cartas aos jogadores."""
+        for player in self.players:
+            player.hand = self.draw_cards(3)  # Exemplo: dar 3 cartas a cada jogador
+
+    def draw_cards(self, count: int) -> List[Card]:
+        """Sorteia cartas do baralho."""
+        drawn_cards = []
+        for _ in range(count):
+            if self.deck:
+                drawn_cards.append(self.deck.pop())  # Remove uma carta do baralho
+        return drawn_cards
 
     def create_players(self):
         """Cria um jogador humano e três bots."""
