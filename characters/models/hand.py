@@ -1,4 +1,3 @@
-
 from typing import List
 
 from characters.interfaces.i_hand import IHand

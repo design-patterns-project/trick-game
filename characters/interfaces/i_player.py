@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
 
 class IPlayer(ABC):
+    @property
+    @abstractmethod
+    def name(self):
+        pass
+
     @abstractmethod
     def play_card(self, card):
         pass

@@ -1,9 +1,8 @@
-from characters.models.card import Card
+from characters.models.player import Player
 from designs_patterns.factory.factories.deck_factory import DeckFactory
 from designs_patterns.factory.factories.game_factory import GameFactory
 from designs_patterns.factory.factories.player_factory import PlayerFactory
-from designs_patterns.factory.factories.round_factory import RoundFactory
-from designs_patterns.proxy.player_proxy import PlayerProxy
+from designs_patterns.factory.factories.bot_factory import BotFactory  # Importando a fábrica de bots
 from designs_patterns.mediator.game_mediator import GameMediator
 from designs_patterns.observer.observer import GameObserver
 from designs_patterns.singleton.game_manager import GameManager
@@ -16,14 +15,20 @@ def main():
     # Criando o Mediator
     game_mediator = GameMediator()
 
-    # Criando jogadores
+    # Solicitando o nome do jogador humano
+    human_player_name = input("Digite o seu nome: ")
+
+    # Usando PlayerFactory para criar o jogador humano
     player_factory = PlayerFactory()
-    player1 = player_factory.create("Jogador 1")
-    player2 = player_factory.create("Jogador 2")
+    player1 = player_factory.create(human_player_name)  # Nome do jogador humano
+
+    # Usando BotFactory para criar bots
+    bot_factory = BotFactory()
+    players = [player1] + [bot_factory.create(f"Bot {i}") for i in range(1, 4)]  # Cria 3 bots
 
     # Registrando jogadores no Mediator
-    game_mediator.register_player(player1)
-    game_mediator.register_player(player2)
+    for player in players:
+        game_mediator.register_player(player)
 
     # Criando e embaralhando o baralho
     deck_factory = DeckFactory()
@@ -32,7 +37,7 @@ def main():
 
     # Criando e iniciando o jogo com o Mediator
     game_factory = GameFactory()
-    game = game_factory.create([player1, player2], game_mediator)
+    game = game_factory.create(players, game_mediator)  # Passando os jogadores corretamente
 
     # Criando um observador e registrando no jogo
     game_observer = GameObserver()
@@ -40,30 +45,45 @@ def main():
 
     game.start_game()
 
-    # Criando e iniciando a primeira rodada com o Mediator
-    round_factory = RoundFactory()
-    round1 = round_factory.create([player1, player2], game_mediator)
-    round1.start_round()
+    # Loop de jogo
+    while not game.winner:
+        # Atualizando o jogador atual de forma correta
+        current_player = game.players[game.current_turn]  # Obtém o jogador atual
 
-    # Substituindo os jogadores por proxies
-    player1_proxy = PlayerProxy(player1, game)
-    player2_proxy = PlayerProxy(player2, game)
+        if isinstance(current_player, Player):
+            print(f"\nÉ a sua vez, {current_player.name}.")
+            action = input("Escolha sua ação (1 - Jogar Carta, 2 - Gritar Truco, 3 - Desistir): ")
 
-    # Simulando a conclusão de turnos usando os proxies
-    # Jogador 1 joga (é o primeiro turno)
-    player1_proxy.play_card(Card("A", "Copas"))  
+            if action == "1":
+                print(f"Sua mão: {[str(card) for card in current_player.hand]}")
+                card_index = int(input("Escolha o número da carta para jogar: ")) - 1
+                if 0 <= card_index < len(current_player.hand):
+                    card = current_player.hand.pop(card_index)
+                    game.played_cards.append(card)
+                    print(f"{current_player.name} jogou {card}.")
+                else:
+                    print("Escolha inválida. Tente novamente.")
+                    continue
+            elif action == "2":
+                current_player.call_truco()
+                print(f"{current_player.name} gritou truco!")
+            elif action == "3":
+                print(f"{current_player.name} desistiu do jogo.")
+                game.winner = "Bots"  # Bots vencem se o jogador desistir
+                break
+            else:
+                print("Ação inválida. Tente novamente.")
+                continue
+        else:
+            # Turno do bot
+            bot_card = current_player.play_card()  # Implementação da jogada do bot
+            game.played_cards.append(bot_card)
+            print(f"{current_player.name} jogou {bot_card}.")
 
-    # Mudando o turno para o próximo jogador
-    game.switch_turn()
+        game.check_winner()  # Verifica se há um vencedor
+        game.switch_turn()  # Alterna o turno para o próximo jogador
 
-    # Jogador 2 joga (agora é a vez dele)
-    player2_proxy.play_card(Card("2", "Copas"))  
-
-    # Mudando o turno de volta para o Jogador 1
-    game.switch_turn()
-
-    # Tentando fazer o Jogador 2 jogar novamente fora do turno
-    player2_proxy.play_card(Card("3", "Ouros"))  # Deve barrar essa jogada
+    print(f"O jogo terminou! Vencedor: {game.winner}")
 
 if __name__ == "__main__":
     main()
