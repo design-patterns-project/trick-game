@@ -2,11 +2,15 @@ from characters.interfaces.i_player import IPlayer
 
 class Player(IPlayer):
     def __init__(self, name: str):
-        self.name = name
+        self._name = name  # Atributo privado para armazenar o nome
         self.score = 0
         self.hand = []
         self.active = True
         self.mediator = None  
+
+    @property
+    def name(self) -> str:
+        return self._name  
 
     def set_mediator(self, mediator):
         self.mediator = mediator  
