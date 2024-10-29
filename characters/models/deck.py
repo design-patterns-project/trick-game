@@ -10,10 +10,11 @@ class Deck(IDeck):
     def shuffle(self):
         random.shuffle(self.cards)
 
-    def deal_cards(self, num_cards: int):
-        """Distribui num_cards do baralho e retorna as cartas distribuídas."""
-        dealt_cards = []
-        for _ in range(num_cards):
-            if self.cards:  
-                dealt_cards.append(self.cards.pop(0))  
-        return dealt_cards
+    def deal_cards(self, num_players: int, cards_per_player: int):
+        """Distribui cartas para os jogadores."""
+        hands = [[] for _ in range(num_players)]
+        for _ in range(cards_per_player):
+            for i in range(num_players):
+                if self.cards:
+                    hands[i].append(self.cards.pop())
+        return hands
