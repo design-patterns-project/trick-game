@@ -7,19 +7,19 @@ from characters.models.player import Player
 from designs_patterns.observer.interfaces.i_observer import IObserver
 from designs_patterns.observer.interfaces.i_subject import ISubject
 from designs_patterns.mediator.game_mediator import GameMediator
-from characters.models.card import Card  # Supondo que você tenha uma classe Card para representar as cartas
+from characters.models.card import Card
 
 class Game(GameInterface, ISubject):
     def __init__(self, players: List[Player], mediator: GameMediator):
         self.mediator = mediator
-        self.players = players  # Recebe a lista de jogadores como argumento
+        self.players = players
         self.winner: Optional[str] = None
         self.current_turn: int = 0
         self.observers: List[IObserver] = []
         self.played_cards = []
-        self.deck = self.create_deck()  # Criar um baralho de cartas
-        self.shuffle_deck()  # Embaralhar o baralho
-        self.deal_cards()  # Distribuir cartas para os jogadores
+        self.deck = self.create_deck()
+        self.shuffle_deck()
+        self.deal_cards()
 
     def create_deck(self):
         """Cria um baralho de cartas."""
@@ -34,23 +34,15 @@ class Game(GameInterface, ISubject):
     def deal_cards(self):
         """Distribui cartas aos jogadores."""
         for player in self.players:
-            player.hand = self.draw_cards(3)  # Exemplo: dar 3 cartas a cada jogador
+            player.hand = self.draw_cards(3)
 
     def draw_cards(self, count: int) -> List[Card]:
         """Sorteia cartas do baralho."""
         drawn_cards = []
         for _ in range(count):
             if self.deck:
-                drawn_cards.append(self.deck.pop())  # Remove uma carta do baralho
+                drawn_cards.append(self.deck.pop())
         return drawn_cards
-
-    def create_players(self):
-        """Cria um jogador humano e três bots."""
-        name = input("Digite o nome do jogador: ")
-        self.players.append(Player(name))
-
-        for i in range(1, 4):
-            self.players.append(SimpleBot(f"Bot_{i}"))
 
     def attach(self, observer: IObserver):
         self.observers.append(observer)
@@ -90,8 +82,7 @@ class Game(GameInterface, ISubject):
         if action == "1":
             self.play_card(player)
         elif action == "2":
-            player.call_truco()
-            self.notify(f"{player.name} gritou truco!")
+            self.call_truco(player)
         elif action == "3":
             print(f"{player.name} desistiu do jogo.")
             self.winner = "Bots"
@@ -170,3 +161,38 @@ class Game(GameInterface, ISubject):
     def get_winner(self) -> Optional[str]:
         """Retorna o vencedor do jogo."""
         return self.winner
+
+    def call_truco(self, player: Player):
+        """Método para o jogador gritar truco de acordo com as regras do Truco Paulista."""
+        print(f"\n{player.name} gritou TRUCO!")
+
+        for opponent in self.players:
+            if opponent != player:
+                if isinstance(opponent, IBot): 
+                    response = opponent.respond_to_truco()  
+
+                    if response:
+                        self.notify(f"{opponent.name} aceitou o truco!")
+                        self.play()  
+                        break  
+                    else:
+                        self.winner = player.name
+                        print(f"{player.name} ganhou a rodada porque o adversário recusou o truco!")
+                        self.end_game()
+                        break  
+                else:
+                    response = random.choice([1, 2, 3])  
+                    if response == 1:
+                        self.notify(f"{opponent.name} aceitou o truco!")
+                        self.play()
+                        break
+                    elif response == 2:
+                        self.winner = player.name
+                        print(f"{player.name} ganhou a rodada porque o adversário recusou o truco!")
+                        self.end_game()
+                        break
+                    elif response == 3:
+                        raise_ = random.choice([6, 9, 12])
+                        self.notify(f"{opponent.name} aumentou a aposta para {raise_}!")
+                        self.call_truco(player)
+                        break
