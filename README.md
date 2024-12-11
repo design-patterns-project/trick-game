@@ -204,27 +204,6 @@ Para começar a jogar o Truco, siga os passos abaixo:
    table.add_player(player4)
    ```
 
-3. **Inicie o jogo**. O jogo começa quando o método `start_game()` é chamado.
-
-   ```python
-   table.start_game()
-   ```
-
-4. **Comece uma rodada**. Durante a rodada, os jogadores jogarão cartas e poderão chamar Truco.
-
-   ```python
-   round = Round(players=[player1, player2, player3, player4])
-   round.start_round()
-   ```
-
-5. **Determine o vencedor**. Após o fim da rodada, o vencedor será determinado.
-
-   ```python
-   round.determine_winner()
-   ```
-
----
-
 ## Como Clonar o Repositório
 
 Para clonar este repositório, siga os passos abaixo:
